@@ -4,29 +4,29 @@
 #include <math.h>
 #include <float.h>
 
-// 1. Veri Tipi Etiketi (Tensörün o an ne tuttuğunu bilmek için)
+// (TensÃ¶rÃ¼n o an ne tuttuÃ°unu bilmek iÃ§in)
 typedef enum {
     TIP_FLOAT32,
     TIP_FLOAT16,
     TIP_INT8
 } VeriTipi;
 
-// 2. UNION MİMARİSİ (Aynı bellek alanını paylaşan veri tipleri)
+// 2. UNION
 typedef union {
     float f32;       
     uint16_t f16;    
     int8_t i8;       
 } TensorVerisi;
 
-// 3. TENSÖR YAPISI
+// 3. TENSÃ–R YAPISI
 typedef struct {
     int satir;
     int sutun;
     VeriTipi tip;
-    TensorVerisi *veri; // Dinamik dizi pointer'ı
+    TensorVerisi *veri; 
 } Tensor;
 
-// --- TENSÖR OLUŞTURMA (RAM'DE YER AYIRMA) ---
+// --- TENSÃ–R OLUÃTURMA  ---
 Tensor* tensor_olustur(int satir, int sutun, VeriTipi tip) {
     Tensor* t = (Tensor*)malloc(sizeof(Tensor));
     t->satir = satir;
@@ -37,7 +37,7 @@ Tensor* tensor_olustur(int satir, int sutun, VeriTipi tip) {
     return t;
 }
 
-// --- BELLEK TEMİZLEME (Memory Leak Önleme) ---
+// --- BELLEK TEMÃZLEME  ---
 void tensor_serbest_birak(Tensor* t) {
     if (t != NULL) {
         free(t->veri); 
@@ -45,37 +45,37 @@ void tensor_serbest_birak(Tensor* t) {
     }
 }
 
-// --- QUANTIZATION (SIKIŞTIRMA) ALGORİTMASI: Float32 -> Int8 ---
+// --- QUANTIZATION ---
 void tensor_kuantize_et(Tensor* kaynak_float, Tensor* hedef_int8) {
     int toplam_eleman = kaynak_float->satir * kaynak_float->sutun;
     float min_deger = FLT_MAX;
     float max_deger = -FLT_MAX;
     float olcek;
-    int i; // C89 standardı için döngü değişkeni en üste alındı
+    int i; 
     
-    // Max ve Min değerleri bul
+    // Max ve Min deÃ°erleri bul
     for(i = 0; i < toplam_eleman; i++) {
         if(kaynak_float->veri[i].f32 < min_deger) min_deger = kaynak_float->veri[i].f32;
         if(kaynak_float->veri[i].f32 > max_deger) max_deger = kaynak_float->veri[i].f32;
     }
 
-    // Ölçek (Scale) hesapla
+    // Ã–lÃ§ek (Scale) hesapla
     olcek = (max_deger - min_deger) / 255.0f;
     if (olcek == 0.0f) olcek = 1.0f; 
     
-    // Tüm float değerleri Int8'e dönüştür
+    // TÃ¼m float deÃ°erleri Int8'e dÃ¶nÃ¼Ã¾tÃ¼r
     for(i = 0; i < toplam_eleman; i++) {
         float normallestirilmis = (kaynak_float->veri[i].f32 - min_deger) / olcek;
         hedef_int8->veri[i].i8 = (int8_t)(round(normallestirilmis) - 128);
     }
 }
 
-// --- ANA FONKSİYON (TEST VE DEMO) ---
+// --- (TEST VE DEMO) ---
 int main() {
     int satir = 3;
     int sutun = 3;
     int toplam_eleman = satir * sutun;
-    int i; // C89 standardı için döngü değişkeni en üste alındı
+    int i;
     float ornek_veriler[] = {0.15f, -1.2f, 3.14f, 0.0f, 2.5f, -0.8f, 1.1f, -2.5f, 0.5f};
     
     Tensor* gercek_agirliklar;
@@ -83,7 +83,7 @@ int main() {
 
     printf("--- TinyML Tensor Yonetimi Basliyor ---\n\n");
 
-    // 1. Orijinal Float32 Tensörü Oluştur ve Doldur
+    // 1. Orijinal Float32 TensÃ¶rÃ¼ OluÃ¾tur ve Doldur
     gercek_agirliklar = tensor_olustur(satir, sutun, TIP_FLOAT32);
     
     printf("Orijinal Float32 Matrisi (Bellek Tuketimi: %lu Byte):\n", (unsigned long)(toplam_eleman * sizeof(float)));
@@ -94,10 +94,10 @@ int main() {
     }
     printf("\n");
 
-    // 2. Sıkıştırılacak Int8 Tensörü Oluştur
+    // 2. 
     sikistirilmis_agirliklar = tensor_olustur(satir, sutun, TIP_INT8);
     
-    // 3. Quantization İşlemini Uygula
+    // 3. Quantization ÃÃ¾lemini Uygula
     tensor_kuantize_et(gercek_agirliklar, sikistirilmis_agirliklar);
     
     printf("Quantize Edilmis Int8 Matrisi (Bellek Tuketimi: %lu Byte):\n", (unsigned long)(toplam_eleman * sizeof(int8_t)));
@@ -116,3 +116,4 @@ int main() {
 	getchar();
     return 0;
 }
+
